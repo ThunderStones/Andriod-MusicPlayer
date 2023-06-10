@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:padding="16dp"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    >
+    <Button
+        android:id="@+id/quit_btn"
+        android:layout_gravity="left"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:background="@drawable/quit"/>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="4">
+
+        <ImageView
+            android:layout_width="260dp"
+            android:layout_height="260dp"
+            android:id="@+id/iv_icon"
+            android:layout_centerInParent="true"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <TextView
+            android:id="@+id/name_txt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="8dp"
+
+            android:textSize="26dp"
+            android:textColor="#000000"
+
+            android:text="歌名" />
+
+
+        <TextView
+            android:id="@+id/artist_txt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/name_txt"
+            android:text="演唱者"
+            android:textColor="#000000"
+
+            android:textSize="20dp" />
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_progress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="40dp"
+        android:gravity="center_vertical">
+        <SeekBar
+            android:layout_width="match_parent"
+            android:id="@+id/seek_bar"
+            android:max="100"
+            style="@style/Widget.AppCompat.SeekBar"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="8dp"
+        android:showDividers="middle"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/play_mode_btn"
+            android:layout_width="40dp"
+            android:layout_marginRight="16dp"
+            android:layout_height="40dp"
+            android:background="@drawable/repeat_list"/>
+        <Button
+            android:id="@+id/play_previous_btn"
+            android:layout_width="40dp"
+            android:layout_marginRight="16dp"
+            android:layout_height="40dp"
+            android:background="@drawable/previous"/>
+        <Button
+            android:id="@+id/play_or_pause_btn"
+            android:layout_width="55dp"
+            android:gravity="center"
+            android:layout_height="55dp"
+            android:background="@drawable/pause"/>
+        <Button
+            android:id="@+id/play_next_btn"
+            android:layout_width="40dp"
+            android:layout_marginLeft="16dp"
+            android:layout_height="40dp"
+            android:background="@drawable/next"/>
+        <Button
+            android:id="@+id/play_list_btn"
+            android:layout_width="40dp"
+            android:layout_marginLeft="16dp"
+            android:layout_height="40dp"
+            android:background="@drawable/list"/>
+    </LinearLayout>
+</LinearLayout>
