@@ -6,22 +6,25 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
 import org.csu.musicplayer.R;
+import org.csu.musicplayer.bean.Album;
 import org.csu.musicplayer.bean.Song;
 import org.csu.musicplayer.utils.LoadSongUtils;
 
 import java.util.List;
 
 
-public class SingleSongFragment extends Fragment {
+public class LocalSongFragment extends Fragment {
     private RecyclerView recyclerView;
 
-    public SingleSongFragment() {
+    private static final String TAG = "SingleSongFragment";
+    public LocalSongFragment() {
         // Required empty public constructor
     }
 
@@ -36,19 +39,24 @@ public class SingleSongFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_single_song, container, false);
+        initRecycleView(view);
+
+        return view;
+    }
+
+    private void initRecycleView(View view) {
+
         recyclerView = view.findViewById(R.id.rv_song);
         List<Song> songs = LoadSongUtils.getLocalMusic(getContext());
-        SingleSongAdapter adapter = new SingleSongAdapter(songs);
-        adapter.setOnItemClickListener(new SingleSongAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClicked(View view, int position) {
-                Toast.makeText(getActivity(), String.valueOf(position), Toast.LENGTH_SHORT).show();
-            }
-        });
+        SingleSongAdapter adapter = null;
+        adapter = new SingleSongAdapter(songs);
+
+
+        adapter.setOnItemClickListener((view1, position) -> Toast.makeText(getActivity(), String.valueOf(position), Toast.LENGTH_SHORT).show());
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(
                 new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false)
         );
-        return view;
     }
+
 }

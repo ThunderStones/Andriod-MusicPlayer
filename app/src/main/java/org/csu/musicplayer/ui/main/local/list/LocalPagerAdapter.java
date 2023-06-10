@@ -13,7 +13,20 @@ public class LocalPagerAdapter extends FragmentStateAdapter {
     @NonNull
     @Override
     public Fragment createFragment(int position) {
-        return new SingleSongFragment();
+
+        switch (position) {
+            case 0:
+                return new LocalSongFragment();
+            case 1:
+                return new AlbumFragment();
+            case 2:
+                return new SingerFragment();
+            case 3:
+                return new FolderFragment();
+            default:
+                return new Fragment();
+        }
+
     }
 
     @Override

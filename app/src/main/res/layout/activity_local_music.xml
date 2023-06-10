@@ -6,6 +6,11 @@
     android:layout_height="match_parent"
     tools:context=".ui.main.local.list.LocalMusicActivity"
     android:orientation="vertical">
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/tool_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/local_tabs"
         android:layout_width="match_parent"

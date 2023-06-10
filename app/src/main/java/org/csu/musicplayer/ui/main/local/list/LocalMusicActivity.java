@@ -2,16 +2,19 @@ package org.csu.musicplayer.ui.main.local.list;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.viewpager2.widget.ViewPager2;
 
 import android.os.Bundle;
+import android.view.MenuItem;
+import android.view.View;
 
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
 import org.csu.musicplayer.R;
-import org.csu.musicplayer.databinding.ActivityMainBinding;
-import org.csu.musicplayer.ui.main.SectionsPagerAdapter;
+
+import java.util.Objects;
 
 public class LocalMusicActivity extends AppCompatActivity {
 
@@ -19,6 +22,12 @@ public class LocalMusicActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_local_music);
+
+        Toolbar toolbar = findViewById(R.id.tool_bar);
+        toolbar.setTitle("Local Music");
+        toolbar.setNavigationIcon(R.drawable.ic_baseline_arrow_back_24);
+        setSupportActionBar(toolbar);
+
         ViewPager2 viewPager = findViewById(R.id.local_view_pager);
         viewPager.setAdapter(new LocalPagerAdapter(this));
 
@@ -47,4 +56,15 @@ public class LocalMusicActivity extends AppCompatActivity {
         );
         tabLayoutMediator.attach();
     }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                break;
+        }
+        return true;
+    }
+
 }

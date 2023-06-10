@@ -11,4 +11,6 @@
     <dimen name="sp_14">14sp</dimen>
     <dimen name="dp_4">4dp</dimen>
     <dimen name="sp_12">12dp</dimen>
+    <dimen name="nav_header_vertical_spacing">8dp</dimen>
+    <dimen name="nav_header_height">176dp</dimen>
 </resources>
