@@ -13,7 +13,7 @@ public class LocalPagerAdapter extends FragmentStateAdapter {
     @NonNull
     @Override
     public Fragment createFragment(int position) {
-        return new Fragment();
+        return new SingleSongFragment();
     }
 
     @Override

@@ -5,4 +5,10 @@
     <dimen name="appbar_padding">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="appbar_padding_top">8dp</dimen>
+    <dimen name="dp_50">50dp</dimen>
+    <dimen name="dp_20">20dp</dimen>
+    <dimen name="dp_10">10dp</dimen>
+    <dimen name="sp_14">14sp</dimen>
+    <dimen name="dp_4">4dp</dimen>
+    <dimen name="sp_12">12dp</dimen>
 </resources>
