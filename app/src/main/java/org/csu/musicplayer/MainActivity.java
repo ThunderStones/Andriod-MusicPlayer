@@ -2,33 +2,35 @@ package org.csu.musicplayer;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ComponentName;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
 import androidx.annotation.NonNull;
-import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 
+import android.support.v4.media.MediaBrowserCompat;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
+import android.widget.LinearLayout;
 
-import org.csu.musicplayer.ui.main.SectionsPagerAdapter;
 import org.csu.musicplayer.databinding.ActivityMainBinding;
+import org.csu.musicplayer.ui.main.SectionsPagerAdapter;
 import org.csu.musicplayer.utils.PermissionUtils;
+
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "MainActivity";
     private ActivityMainBinding binding;
-
+    private MediaBrowserCompat mBrowser;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,13 +38,10 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         PermissionUtils.initCheckSelfPermission(this);
-//        SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter( getSupportFragmentManager());
-//        ViewPager2 viewPager = binding.viewPager;
-//        viewPager.setAdapter(sectionsPagerAdapter);
-//        TabLayout tabs = binding.tabs;
-//        tabs.setupWithViewPager(viewPager);
         ViewPager2 viewPager = binding.viewPager;
         viewPager.setAdapter(new SectionsPagerAdapter(this));
+
+
 
         TabLayout tabs = binding.tabs;
         TabLayoutMediator tabLayoutMediator = new TabLayoutMediator(
@@ -62,9 +61,31 @@ public class MainActivity extends AppCompatActivity {
         );
         tabLayoutMediator.attach();
 
+        LinearLayout layout = findViewById(R.id.mini_player);
+        layout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent();
+                intent.setClass(MainActivity.this, PlayActivity.class);
+                startActivity(intent);
+            }
+        });
 
 
     }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+    }
+
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         Log.d("MainActivity", "onRequestPermissionsResult: " + requestCode);
@@ -95,4 +116,8 @@ public class MainActivity extends AppCompatActivity {
         dialog.setCancelable(false);//点击返回键不消失
         dialog.show();
     }
+
+
+
+
 }

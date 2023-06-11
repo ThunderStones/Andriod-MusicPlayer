@@ -1,33 +1,64 @@
 package org.csu.musicplayer;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
+import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.view.View;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Looper;
+import android.os.Message;
+import android.os.RemoteException;
+import android.support.v4.media.MediaBrowserCompat;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import org.csu.musicplayer.player.PlayerControl;
-import org.csu.musicplayer.player.PlayerPresenter;
-import org.csu.musicplayer.player.PlayerViewControl;
-import org.csu.musicplayer.util.MusicPlayUtil;
+import org.csu.musicplayer.bean.Song;
+
+import org.csu.musicplayer.service.MusicService;
 import org.csu.musicplayer.util.PlayMode;
-import org.csu.musicplayer.util.PlayState;
 import org.json.JSONArray;
 
-public class PlayActivity extends Activity {
+import java.util.List;
 
+public class PlayActivity extends Activity {
+    private static final String TAG = "PlayActivity";
     public int musicId;
     public int songNum = 0;
     public String playAddress;
-    public PlayMode playMode;
+    public PlayMode playMode = PlayMode.REPEAT_LIST;
     private boolean isUserTouchSeekBar = false;
+    private Song currentSong;
+    private MusicReceiver musicReceive;
+    private MusicService.MusicController controller;
+    private ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            controller = (MusicService.MusicController) service;
+        }
 
-    private SeekBar mSeekBar;
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+
+    private static SeekBar mSeekBar;
     private Button mPlayOrPause;
     private Button mPlayMode;
     private Button mPlayPrevious;
@@ -39,17 +70,49 @@ public class PlayActivity extends Activity {
     public ImageView mMusicPic;
     public static JSONArray musicList;
 
-    public PlayerControl mPlayerControl = new PlayerPresenter(this);
-    private MusicPlayUtil musicPlayUtil = MusicPlayUtil.getInstance();
+
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play);
 
-        musicPlayUtil.setPlayActivity(this);
+
         initView();
         initEvent();
+        initService();
+        initBroadcast();
+    }
+
+    private void initBroadcast() {
+        musicReceive = new MusicReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("music");
+        registerReceiver(musicReceive, filter);
+    }
+
+    private void initService() {
+        Intent intent = new Intent(PlayActivity.this, MusicService.class);
+        bindService(intent, connection, BIND_AUTO_CREATE);
+    }
+
+    private void updateView(MediaMetadataCompat metadata) {
+        mMusicName.setText(metadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE));
+        mMusicArtist.setText(metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST));
+        mMusicPic.setImageBitmap(metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART));
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
     }
 
     private void initView() {
@@ -72,49 +135,53 @@ public class PlayActivity extends Activity {
             mPlayMode.setBackgroundResource(R.drawable.shuffle);
         }
 
-        getMusicListThread();
     }
 
-    private void getMusicListThread() {
-        new Thread() {
-            @Override
-            public void run() {
 
-            }
-        }.start();
-    }
 
     private void initEvent() {
         mPlayOrPause.setOnClickListener(v -> {
-            if (mPlayerControl != null) {
-                mPlayerControl.playOrPause(PlayState.PLAY_STATE_STOP);
+            Log.d(TAG, "initEvent: PLAY");
+            if(!controller.isMediaPlayerInit()) {
+                controller.play();
+                mSeekBar.setMax((int) controller.getDuration());
+                mPlayOrPause.setBackgroundResource(R.drawable.play);
+            } else if (controller.isPlaying()){
+                controller.pause();
+                mPlayOrPause.setBackgroundResource(R.drawable.pause);
+            } else {
+                controller.resume();
+                mPlayOrPause.setBackgroundResource(R.drawable.play);
             }
+
+
         });
 
         mPlayPrevious.setOnClickListener(v -> {
-            if (mPlayerControl != null) {
-                mPlayerControl.playPrevious();
-            }
+            controller.previous();
         });
 
         mPlayNext.setOnClickListener(v -> {
-            if (mPlayerControl != null) {
-                mPlayerControl.playNext();
-            }
+            controller.next();
         });
 
         mPlayMode.setOnClickListener(v -> {
-            if (mPlayerControl != null) {
-                if (PlayMode.REPEAT_LIST == playMode) {
-                    playMode = PlayMode.REPEAT_ONE;
+            switch (playMode) {
+                case REPEAT_LIST:
+                    playMode= PlayMode.REPEAT_ONE;
                     mPlayMode.setBackgroundResource(R.drawable.repeat_one);
-                } else if (PlayMode.REPEAT_ONE == playMode) {
-                    playMode = PlayMode.SHUFFLE;
+                    controller.setPlayMode(PlayMode.REPEAT_ONE);
+                    break;
+                case REPEAT_ONE:
+                    playMode= PlayMode.SHUFFLE;
                     mPlayMode.setBackgroundResource(R.drawable.shuffle);
-                } else if (PlayMode.SHUFFLE == playMode) {
+                    controller.setPlayMode(PlayMode.SHUFFLE);
+                    break;
+                case SHUFFLE:
                     playMode = PlayMode.REPEAT_LIST;
                     mPlayMode.setBackgroundResource(R.drawable.repeat_list);
-                }
+                    controller.setPlayMode(PlayMode.REPEAT_LIST);
+                    break;
             }
         });
 
@@ -128,7 +195,9 @@ public class PlayActivity extends Activity {
 
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {}
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+            }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
@@ -138,39 +207,35 @@ public class PlayActivity extends Activity {
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 int seekBarProgress = seekBar.getProgress();
-                if (mPlayerControl != null) {
-                    mPlayerControl.seekTo(seekBarProgress);
-                }
+                controller.seekTo(seekBarProgress);
                 isUserTouchSeekBar = false;
             }
         });
     }
 
-    public PlayerViewControl mPLayerViewControl = new PlayerViewControl() {
+    public static Handler handler = new Handler(Looper.myLooper()) {
         @Override
-        public void onPlayerStateChange(PlayState playState) {
-            switch (playState) {
-                case PLAY_STATE_PLAY:
-                    mPlayOrPause.setBackgroundResource(R.drawable.play);
-                    break;
-                case PLAY_STATE_PAUSE:
-                case PLAY_STATE_STOP:
-                    mPlayOrPause.setBackgroundResource(R.drawable.pause);
-                    break;
-            }
-        }
-
-        @Override
-        public void onSeekChange(int seek) {
-            runOnUiThread(() -> {
-                if (!isUserTouchSeekBar) {
-                    mSeekBar.setProgress(seek);
-                    if (seek == 100) {
-                        mPlayerControl.playNext();
-                    }
-                }
-            });
+        public void handleMessage(@NonNull Message msg) {
+            super.handleMessage(msg);
+            Bundle bundle = msg.getData();
+            int duration = bundle.getInt("duration");
+            int currentPosition = bundle.getInt("currentPosition");
+            mSeekBar.setMax(duration);
+            mSeekBar.setProgress(currentPosition);
         }
     };
+    //内部类，实现BroadcastReceiver
+    public class MusicReceiver extends BroadcastReceiver {
+        //必须要重载的方法，用来监听是否有广播发送
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String intentAction = intent.getAction();
+            if (intentAction.equals("music")) {
+                Song song = intent.getExtras().getSerializable("song", Song.class);
+                Log.d(TAG, "onReceive: " + song.toString());
+            }
+        }
+    }
 
 }
+

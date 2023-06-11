@@ -16,13 +16,14 @@ import org.csu.musicplayer.R;
 import org.csu.musicplayer.bean.Album;
 import org.csu.musicplayer.bean.Song;
 import org.csu.musicplayer.utils.LoadSongUtils;
+import org.csu.musicplayer.utils.MusicProviderUtils;
 
 import java.util.List;
 
 
 public class LocalSongFragment extends Fragment {
     private RecyclerView recyclerView;
-
+    private List<Song> songs;
     private static final String TAG = "SingleSongFragment";
     public LocalSongFragment() {
         // Required empty public constructor
@@ -47,12 +48,15 @@ public class LocalSongFragment extends Fragment {
     private void initRecycleView(View view) {
 
         recyclerView = view.findViewById(R.id.rv_song);
-        List<Song> songs = LoadSongUtils.getLocalMusic(getContext());
+        songs = LoadSongUtils.getLocalMusic(getContext());
         SingleSongAdapter adapter = null;
         adapter = new SingleSongAdapter(songs);
 
 
-        adapter.setOnItemClickListener((view1, position) -> Toast.makeText(getActivity(), String.valueOf(position), Toast.LENGTH_SHORT).show());
+        adapter.setOnItemClickListener((view1, position) -> {
+            Toast.makeText(getActivity(), String.valueOf(position), Toast.LENGTH_SHORT).show();
+            MusicProviderUtils.addToPlaylist(songs.get(position));
+        });
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(
                 new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false)
