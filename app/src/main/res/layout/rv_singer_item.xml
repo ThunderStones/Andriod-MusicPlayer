@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/constraint_layout"
+    android:layout_width="match_parent"
+    android:layout_height="60dp"
+    android:padding="5dp">
+
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="@dimen/dp_50"
+        android:layout_height="@dimen/dp_50"
+        app:srcCompat="@mipmap/play_head"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/dp_50"
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/imageView"
+        android:maxWidth="300dp"
+        android:orientation="vertical"
+        android:gravity="left"
+        android:layout_marginLeft="5dp"
+        >
+        <TextView
+            android:id="@+id/artistName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/sp_14"
+            android:textColor="@color/black"
+            android:layout_marginBottom="@dimen/dp_4"
+            android:layout_marginTop="@dimen/dp_4"
+            android:text="RADWIPMS"/>
+
+        <TextView
+            android:id="@+id/song_number"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/dp_4"
+            android:textSize="@dimen/sp_12"
+            android:text="0 Song"/>
+    </LinearLayout>
+<!--    <ImageView-->
+<!--        android:id="@+id/localMenu"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="@dimen/dp_50"-->
+<!--        android:paddingRight="@dimen/dp_20"-->
+<!--        android:paddingLeft="@dimen/dp_20"-->
+<!--        android:paddingTop="@dimen/dp_10"-->
+<!--        android:paddingBottom="@dimen/dp_10"-->
+<!--        android:layout_gravity="center_vertical"-->
+<!--        android:src="@mipmap/localmenu"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent"/>-->
+</androidx.constraintlayout.widget.ConstraintLayout>
