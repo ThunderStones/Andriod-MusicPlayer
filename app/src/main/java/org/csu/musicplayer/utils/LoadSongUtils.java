@@ -22,8 +22,14 @@ import org.csu.musicplayer.bean.Artist;
 import org.csu.musicplayer.bean.Folder;
 import org.csu.musicplayer.bean.Song;
 import org.csu.musicplayer.dao.HistoryDao;
+import org.csu.musicplayer.dao.PlaylistDao;
+import org.csu.musicplayer.dao.PlaylistItemDao;
 import org.csu.musicplayer.database.HistoryDatabase;
+import org.csu.musicplayer.database.PlaylistDatabase;
+import org.csu.musicplayer.database.PlaylistItemDatabase;
 import org.csu.musicplayer.entity.History;
+import org.csu.musicplayer.entity.Playlist;
+import org.csu.musicplayer.entity.PlaylistItem;
 
 import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
@@ -55,6 +61,10 @@ public class LoadSongUtils {
     public static Song song;
     private static final Uri sArtworkUri = Uri.parse("content://media/external/audio/albumart");
     private static long version = 0;
+    private static int favoriteListId;
+    private static PlaylistDao playlistDao;
+    private static PlaylistItemDao playlistItemDao;
+
 
     private static boolean checkUpdate(Context context) {
         Set<String> volumeNames = MediaStore.getExternalVolumeNames(context);
@@ -279,21 +289,47 @@ public class LoadSongUtils {
         return songList;
     }
 
-    public static Set<Integer> getFavoriteSongsId(Context context) {
+
+    public static void initLocalMusic(Context context) {
         getLocalMusic(context);
-        FavoriteDao favoriteDao = FavoriteDatabase.getInstance(context).getFavoriteDao();
-        Set<Integer> songsId = new HashSet<>();
-        List<FavoriteSong> favoriteSongs = favoriteDao.getFavoriteSongList();
-        for (FavoriteSong favoriteSong:
-             favoriteSongs) {
-            if (songMap.containsKey(favoriteSong.getMediaId())) {
-                songsId.add(favoriteSong.getMediaId());
-            }
-        }
-        return songsId;
+        initDataBase(context);
+        getFavoriteListId(context);
     }
 
-    public static void initFavoriteList(Context context) {
+    private static void initDataBase(Context context) {
+        playlistDao = PlaylistDatabase.getInstance(context).getPlaylistDao();
+        playlistItemDao = PlaylistItemDatabase.getInstance(context).getPlaylistItemDao();
+    }
 
+    private static void getFavoriteListId(Context context) {
+        List<Playlist> playlists = playlistDao.getPlaylist();
+        for (Playlist pl :
+                playlists) {
+            if ("favorite".equals(pl.getType())) {
+                favoriteListId = pl.getId();
+                return;
+            }
+        }
+        // favorite list not exist, add one
+        Playlist playList = new Playlist();
+        playList.setName("我的收藏");
+        playList.setType("favorite");
+        playlistDao.insertPlaylist(playList);
+        getFavoriteListId(context);
+    }
+    private static List<Playlist> getAllPlaylists() {
+        List<Playlist> playlists = playlistDao.getPlaylist();
+        playlists.removeIf(pl -> pl.getId() == favoriteListId);
+        return playlists;
+    }
+    private static List<Song> getSongListByPlayListId(int playlistId) {
+        List<Song> songList = new ArrayList<>();
+        List<PlaylistItem> playlistItems = playlistItemDao.getPlaylistItemsByPlaylistId(playlistId);
+        for (PlaylistItem playlistItem : playlistItems) {
+            if (songMap.containsKey(playlistItem.getMediaId())) {
+                songList.add(songMap.get(playlistItem.getMediaId()));
+            }
+        }
+        return songList;
     }
 }
