@@ -7,9 +7,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.PopupWindow;
 import android.widget.Toast;
 
 import org.csu.musicplayer.R;
@@ -24,7 +26,7 @@ import java.util.List;
 public class LocalSongFragment extends Fragment {
     private RecyclerView recyclerView;
     private List<Song> songs;
-    private static final String TAG = "SingleSongFragment";
+    private static final String TAG = "LocalSongFragment";
     public LocalSongFragment() {
         // Required empty public constructor
     }
@@ -53,10 +55,11 @@ public class LocalSongFragment extends Fragment {
         adapter = new SingleSongAdapter(songs);
 
 
-        adapter.setOnItemClickListener((view1, position) -> {
-            Toast.makeText(getActivity(), String.valueOf(position), Toast.LENGTH_SHORT).show();
-            MusicProviderUtils.addToPlaylist(songs.get(position));
-        });
+//        adapter.setOnItemClickListener((view1, position) -> {
+//            Toast.makeText(getActivity(), String.valueOf(position), Toast.LENGTH_SHORT).show();
+//            boolean b = MusicProviderUtils.addToPlaylist(songs.get(position));
+//            Log.d(TAG, "initRecycleView: add to play list:"  + b );
+//        });
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(
                 new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false)

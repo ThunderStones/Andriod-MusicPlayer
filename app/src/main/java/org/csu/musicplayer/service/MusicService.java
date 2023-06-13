@@ -11,11 +11,16 @@ import android.util.Log;
 
 import org.csu.musicplayer.PlayActivity;
 import org.csu.musicplayer.bean.Song;
+import org.csu.musicplayer.dao.HistoryDao;
+import org.csu.musicplayer.database.HistoryDatabase;
+import org.csu.musicplayer.entity.History;
 import org.csu.musicplayer.util.PlayMode;
 import org.csu.musicplayer.utils.MusicProviderUtils;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -29,7 +34,7 @@ public class MusicService extends Service {
     private boolean isPlaying = false;
     private boolean isMediaPlayerInit = false;
     private PlayMode playMode;
-
+    private HistoryDao historyDao;
     public MusicService() {
     }
 
@@ -41,6 +46,8 @@ public class MusicService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d(TAG, "onCreate: Service Create");
+        historyDao = HistoryDatabase.getInstance(getApplicationContext()).getHistoryDao();
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
@@ -59,17 +66,25 @@ public class MusicService extends Service {
 
     @Override
     public void onDestroy() {
+        Log.d(TAG, "onDestroy: Service Destroy");
         super.onDestroy();
+        mediaPlayer.stop();
+        mediaPlayer.release();
     }
 
     public class MusicController extends Binder {
         public void play() {
             if (MusicProviderUtils.getPlaylist().size() > 0) {
+                indexOfPlaying = 0;
                 playMusicInIndex(0);
-                addTimer();
             }
         }
-
+        public void playIndex(int index) {
+            if (index >= 0 && index < MusicProviderUtils.getPlaylist().size()) {
+                indexOfPlaying = index;
+                playMusicInIndex(index);
+            }
+        }
         public void pause() {
             mediaPlayer.pause();
             isPlaying = false;
@@ -103,10 +118,7 @@ public class MusicService extends Service {
         }
 
         public void previous() {
-            Log.d(TAG, "previous: " + indexOfPlaying);
             int prev = getPrevSongIndex();
-            Log.d(TAG, "previous: " + prev);
-
             playMusicInIndex(prev);
             indexOfPlaying = prev;
         }
@@ -119,7 +131,11 @@ public class MusicService extends Service {
             return mediaPlayer.getDuration();
         }
         public Song getCurrentSong() {
-            return MusicProviderUtils.getPlaylist().get(indexOfPlaying);
+            Log.d(TAG, "getCurrentSong: " + isMediaPlayerInit);
+            if (isMediaPlayerInit && indexOfPlaying != -1)
+                return MusicProviderUtils.getPlaylist().get(indexOfPlaying);
+            else
+                return null;
         }
 
     }
@@ -130,36 +146,65 @@ public class MusicService extends Service {
 
         Song song = songs.get(next);
         try {
-            mediaPlayer.setDataSource(songs. get(next).path);
+            mediaPlayer.setDataSource(song.path);
             mediaPlayer.prepare();
         } catch (IOException e) {
             e.printStackTrace();
         }
         mediaPlayer.start();
+
+        addHistory(song);
+
         Intent intent = new Intent();
-        Bundle bundle = new Bundle();
-        bundle.putSerializable("song", song);
-        intent.putExtras(bundle);
+        intent.putExtra("index", next);
         intent.setAction("music");
         sendBroadcast(intent);
         isMediaPlayerInit = true;
         isPlaying = true;
+        addTimer();
+    }
+
+    private void addHistory(Song song) {
+        Log.d(TAG, "addHistory: " + song.song);
+        History history = new History();
+        history.setMediaId(song.id);
+        history.setPlayTime(new Date());
+        historyDao.insertHistory(history);
+
     }
 
     private int getNextSongIndex() {
-        if (MusicProviderUtils.getPlaylist().size() <= indexOfPlaying + 1) {
-            return 0;
-        } else {
-            return indexOfPlaying + 1;
+        switch (playMode){
+            case REPEAT_LIST:
+                if (MusicProviderUtils.getPlaylist().size() <= indexOfPlaying + 1) {
+                    return 0;
+                } else {
+                    return indexOfPlaying + 1;
+                }
+            case SHUFFLE:
+                int totalSongCount = MusicProviderUtils.getPlaylist().size();
+                return new Random().nextInt(totalSongCount);
+            case REPEAT_ONE:
+                return indexOfPlaying;
         }
+        return 0;
     }
 
     private int getPrevSongIndex() {
-        if (indexOfPlaying - 1 < 0) {
-            return MusicProviderUtils.getPlaylist().size() - 1;
-        } else {
-            return indexOfPlaying - 1;
+        switch (playMode){
+            case REPEAT_LIST:
+                if (indexOfPlaying - 1 < 0) {
+                    return MusicProviderUtils.getPlaylist().size() - 1;
+                } else {
+                    return indexOfPlaying - 1;
+                }
+            case SHUFFLE:
+                int totalSongCount = MusicProviderUtils.getPlaylist().size();
+                return new Random().nextInt(totalSongCount);
+            case REPEAT_ONE:
+                return indexOfPlaying;
         }
+        return 0;
     }
 
     private void addTimer() {

@@ -1,7 +1,6 @@
 package org.csu.musicplayer.utils;
 
 import android.annotation.SuppressLint;
-import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.res.Resources;
@@ -22,6 +21,9 @@ import org.csu.musicplayer.bean.Album;
 import org.csu.musicplayer.bean.Artist;
 import org.csu.musicplayer.bean.Folder;
 import org.csu.musicplayer.bean.Song;
+import org.csu.musicplayer.dao.HistoryDao;
+import org.csu.musicplayer.database.HistoryDatabase;
+import org.csu.musicplayer.entity.History;
 
 import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
@@ -29,6 +31,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -44,6 +47,7 @@ public class LoadSongUtils {
     //定义一个集合，存放从本地读取到的内容
     private static final String TAG = "LoadSongUtils";
     public static List<Song> list;
+    public static Map<Integer, Song> songMap;
     public static List<Album> albumList;
     public static List<Folder> folders;
     public static List<Artist> artists;
@@ -70,7 +74,8 @@ public class LoadSongUtils {
             return list;
         }
         Log.d(TAG, "getmusic: Get Music");
-        list = new ArrayList<>();
+//        list = new ArrayList<>();
+        songMap = new HashMap<>();
         String remove = ".mp3";
 
         Cursor cursor = context.getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
@@ -111,13 +116,14 @@ public class LoadSongUtils {
 //                        song.singer = str[0].trim();
                         song.song = song.song.replace(str[0] + '-', "");
                     }
-                    list.add(song);
+//                    list.add(song);
+                    songMap.put(song.id, song);
                 }
 
             }
             cursor.close();
         }
-
+        list = new ArrayList<>(songMap.values());
         Log.d("LoadSongUtils", "getMusic: " + list.toString());
         return list;
 
@@ -255,5 +261,39 @@ public class LoadSongUtils {
         }
         folders = new ArrayList<>(folderMap.values());
         return folders;
+    }
+    public static List<Song> getHistories(Context context) {
+        getLocalMusic(context);
+        HistoryDao historyDao = HistoryDatabase.getInstance(context).getHistoryDao();
+        List<History> histories = historyDao.getHistories();
+        List<Song> songList = new ArrayList<>();
+        for (History history:
+             histories) {
+            if (songMap.containsKey(history.getMediaId())) {
+                Song song = songMap.get(history.getMediaId());
+                if (!songList.contains(song))
+                    songList.add(song);
+
+            }
+        }
+        return songList;
+    }
+
+    public static Set<Integer> getFavoriteSongsId(Context context) {
+        getLocalMusic(context);
+        FavoriteDao favoriteDao = FavoriteDatabase.getInstance(context).getFavoriteDao();
+        Set<Integer> songsId = new HashSet<>();
+        List<FavoriteSong> favoriteSongs = favoriteDao.getFavoriteSongList();
+        for (FavoriteSong favoriteSong:
+             favoriteSongs) {
+            if (songMap.containsKey(favoriteSong.getMediaId())) {
+                songsId.add(favoriteSong.getMediaId());
+            }
+        }
+        return songsId;
+    }
+
+    public static void initFavoriteList(Context context) {
+
     }
 }

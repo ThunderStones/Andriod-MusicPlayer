@@ -22,6 +22,7 @@ import android.widget.LinearLayout;
 
 import org.csu.musicplayer.databinding.ActivityMainBinding;
 import org.csu.musicplayer.ui.main.SectionsPagerAdapter;
+import org.csu.musicplayer.utils.LoadSongUtils;
 import org.csu.musicplayer.utils.PermissionUtils;
 
 import java.util.List;
@@ -71,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        LoadSongUtils.initFavoriteList(getApplicationContext());
 
     }
 

@@ -35,14 +35,14 @@ public class HistoryActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbar);
         recyclerView = findViewById(R.id.rv_detail);
         toolbar.setNavigationIcon(R.drawable.ic_baseline_arrow_back_24);
-
+        toolbar.setTitle("最近播放");
         //TO-DO : get song list
-
+        songs = LoadSongUtils.getHistories(getApplicationContext());
         setSupportActionBar(toolbar);
         SingleSongAdapter adapter = null;
         adapter = new SingleSongAdapter(songs);
 
-        adapter.setOnItemClickListener((view1, position) -> Toast.makeText(this, String.valueOf(position), Toast.LENGTH_SHORT).show());
+//        adapter.setOnItemClickListener((view1, position) -> Toast.makeText(this, String.valueOf(position), Toast.LENGTH_SHORT).show());
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)

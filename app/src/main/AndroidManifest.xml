@@ -53,7 +53,16 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
-        <activity android:name=".PlayActivity" />
+        <activity
+            android:name=".PlayActivity"
+            android:launchMode="singleTask" />
+        <activity
+            android:name=".ui.main.local.HistoryActivity"
+            android:theme="@style/Theme.MusicPlayer.NoActionBar" />
+        <activity
+            android:name=".ui.main.local.FavoriteActivity"
+            android:theme="@style/Theme.MusicPlayer.NoActionBar" />
+
     </application>
 
 </manifest>

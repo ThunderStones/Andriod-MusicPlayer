@@ -15,6 +15,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import org.csu.musicplayer.R;
+import org.csu.musicplayer.entity.History;
 import org.csu.musicplayer.ui.main.local.list.LocalMusicActivity;
 
 
@@ -38,9 +39,19 @@ public class LocalFragment extends Fragment {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(getActivity(), LocalMusicActivity.class);
-
-                Log.d(TAG, "onItemClick: position="+ position + ";text=" + parent.getItemAtPosition(position).toString() );
+                Intent intent = null;
+                switch (position) {
+                    case 0:
+                        intent = new Intent(getActivity(), LocalMusicActivity.class);
+                        break;
+                    case 2:
+                        intent = new Intent(getActivity(), FavoriteActivity.class);
+                        break;
+                    case 1:
+                        intent = new Intent(getActivity(), HistoryActivity.class);
+                        break;
+                }
+                Log.d(TAG, "onItemClick: position=" + position + ";text=" + parent.getItemAtPosition(position).toString());
                 startActivity(intent);
             }
 

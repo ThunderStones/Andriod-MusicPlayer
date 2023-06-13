@@ -1,6 +1,5 @@
 package org.csu.musicplayer;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -8,32 +7,38 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
-import android.os.RemoteException;
-import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
-import android.support.v4.media.session.MediaControllerCompat;
-import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.SeekBar;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import org.csu.musicplayer.bean.Song;
 
 import org.csu.musicplayer.service.MusicService;
 import org.csu.musicplayer.util.PlayMode;
+import org.csu.musicplayer.utils.MusicProviderUtils;
 import org.json.JSONArray;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class PlayActivity extends Activity {
@@ -49,7 +54,13 @@ public class PlayActivity extends Activity {
     private ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(TAG, "onServiceConnected: Service Connected");
             controller = (MusicService.MusicController) service;
+            Song song = controller.getCurrentSong();
+            Log.d(TAG, "onServiceConnected: " + song);
+            if (song != null) {
+                updateSongInfo(song);
+            }
         }
 
         @Override
@@ -71,8 +82,6 @@ public class PlayActivity extends Activity {
     public static JSONArray musicList;
 
 
-
-
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,6 +92,7 @@ public class PlayActivity extends Activity {
         initEvent();
         initService();
         initBroadcast();
+
     }
 
     private void initBroadcast() {
@@ -90,18 +100,16 @@ public class PlayActivity extends Activity {
         IntentFilter filter = new IntentFilter();
         filter.addAction("music");
         registerReceiver(musicReceive, filter);
+
     }
 
     private void initService() {
+
         Intent intent = new Intent(PlayActivity.this, MusicService.class);
+        startService(intent);
         bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
-    private void updateView(MediaMetadataCompat metadata) {
-        mMusicName.setText(metadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE));
-        mMusicArtist.setText(metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST));
-        mMusicPic.setImageBitmap(metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART));
-    }
 
     @Override
     protected void onStart() {
@@ -115,14 +123,22 @@ public class PlayActivity extends Activity {
 
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy: ");
+        unbindService(connection);
+        unregisterReceiver(musicReceive);
+    }
+
     private void initView() {
         mSeekBar = (SeekBar) this.findViewById(R.id.seek_bar);
         mPlayOrPause = (Button) this.findViewById(R.id.play_or_pause_btn);
         mPlayMode = (Button) this.findViewById(R.id.play_mode_btn);
-        mPlayPrevious= (Button) this.findViewById(R.id.play_previous_btn);
+        mPlayPrevious = (Button) this.findViewById(R.id.play_previous_btn);
         mPlayNext = (Button) this.findViewById(R.id.play_next_btn);
         mPlayList = (Button) this.findViewById(R.id.play_list_btn);
-        mQuit=(Button) this.findViewById(R.id.quit_btn);
+        mQuit = (Button) this.findViewById(R.id.quit_btn);
         mMusicName = (TextView) this.findViewById(R.id.name_txt);
         mMusicArtist = (TextView) this.findViewById(R.id.artist_txt);
         mMusicPic = (ImageView) this.findViewById(R.id.iv_icon);
@@ -138,15 +154,14 @@ public class PlayActivity extends Activity {
     }
 
 
-
     private void initEvent() {
         mPlayOrPause.setOnClickListener(v -> {
             Log.d(TAG, "initEvent: PLAY");
-            if(!controller.isMediaPlayerInit()) {
+            if (!controller.isMediaPlayerInit()) {
                 controller.play();
                 mSeekBar.setMax((int) controller.getDuration());
                 mPlayOrPause.setBackgroundResource(R.drawable.play);
-            } else if (controller.isPlaying()){
+            } else if (controller.isPlaying()) {
                 controller.pause();
                 mPlayOrPause.setBackgroundResource(R.drawable.pause);
             } else {
@@ -168,12 +183,12 @@ public class PlayActivity extends Activity {
         mPlayMode.setOnClickListener(v -> {
             switch (playMode) {
                 case REPEAT_LIST:
-                    playMode= PlayMode.REPEAT_ONE;
+                    playMode = PlayMode.REPEAT_ONE;
                     mPlayMode.setBackgroundResource(R.drawable.repeat_one);
                     controller.setPlayMode(PlayMode.REPEAT_ONE);
                     break;
                 case REPEAT_ONE:
-                    playMode= PlayMode.SHUFFLE;
+                    playMode = PlayMode.SHUFFLE;
                     mPlayMode.setBackgroundResource(R.drawable.shuffle);
                     controller.setPlayMode(PlayMode.SHUFFLE);
                     break;
@@ -186,7 +201,34 @@ public class PlayActivity extends Activity {
         });
 
         mPlayList.setOnClickListener(v -> {
+            View view = getLayoutInflater().inflate( R.layout.playlist, null);
+            ListView listView = view.findViewById(R.id.list_view);
+            List<Song> playlist = MusicProviderUtils.getPlaylist();
+            List<HashMap<String, String>> list = new ArrayList<>();
+            String[] from = new String[]{"title", "subtitle"};
+            int[] to = new int[]{android.R.id.text1, android.R.id.text2};
+            for (Song song :
+                    playlist) {
+                HashMap<String, String> item1 = new HashMap<>();
+                item1.put("title", song.song);
+                item1.put("subtitle", song.singer);
+                list.add(item1);
+            }
 
+
+            SimpleAdapter adapter = new SimpleAdapter(this, list,
+                    android.R.layout.simple_list_item_2, from, to);
+            listView.setAdapter(adapter);
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Toast.makeText(PlayActivity.this, String.valueOf(position), Toast.LENGTH_SHORT).show();
+                    controller.playIndex(position);
+                }
+            });
+            BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
+            bottomSheetDialog.setContentView(view);
+            bottomSheetDialog.show();
         });
 
         mQuit.setOnClickListener(v -> {
@@ -224,6 +266,7 @@ public class PlayActivity extends Activity {
             mSeekBar.setProgress(currentPosition);
         }
     };
+
     //内部类，实现BroadcastReceiver
     public class MusicReceiver extends BroadcastReceiver {
         //必须要重载的方法，用来监听是否有广播发送
@@ -231,10 +274,23 @@ public class PlayActivity extends Activity {
         public void onReceive(Context context, Intent intent) {
             String intentAction = intent.getAction();
             if (intentAction.equals("music")) {
-                Song song = intent.getExtras().getSerializable("song", Song.class);
-                Log.d(TAG, "onReceive: " + song.toString());
+                int index = intent.getIntExtra("index", -1);
+                if (index != -1) {
+                    Song song = MusicProviderUtils.getPlaylist().get(index);
+                    Log.d(TAG, "onReceive: " + song.toString());
+                    updateSongInfo(song);
+                }
             }
         }
+    }
+
+    private void updateSongInfo(Song song) {
+        if (song == null)
+            return;
+        mMusicName.setText(song.song);
+        mMusicArtist.setText(song.singer);
+        mMusicPic.setImageBitmap(song.albumBitmap);
+        mSeekBar.setMax(song.duration);
     }
 
 }

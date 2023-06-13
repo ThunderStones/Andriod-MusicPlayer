@@ -41,7 +41,7 @@ public class FavoriteActivity extends AppCompatActivity {
         SingleSongAdapter adapter = null;
         adapter = new SingleSongAdapter(songs);
 
-        adapter.setOnItemClickListener((view1, position) -> Toast.makeText(this, String.valueOf(position), Toast.LENGTH_SHORT).show());
+//        adapter.setOnItemClickListener((view1, position) -> Toast.makeText(this, String.valueOf(position), Toast.LENGTH_SHORT).show());
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(
                 new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
