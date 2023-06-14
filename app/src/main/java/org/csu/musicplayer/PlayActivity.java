@@ -1,6 +1,7 @@
 package org.csu.musicplayer;
 
 import android.app.Activity;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -27,6 +28,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
@@ -40,6 +42,8 @@ import org.json.JSONArray;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class PlayActivity extends Activity {
     private static final String TAG = "PlayActivity";
@@ -51,6 +55,8 @@ public class PlayActivity extends Activity {
     private Song currentSong;
     private MusicReceiver musicReceive;
     private MusicService.MusicController controller;
+    private Timer timer;
+
     private ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -61,6 +67,23 @@ public class PlayActivity extends Activity {
             if (song != null) {
                 updateSongInfo(song);
             }
+            if (timer == null) {
+            timer = new Timer();
+            TimerTask timerTask = new TimerTask() {
+                @Override
+                public void run() {
+                    if(controller.isPlaying()){
+                        long duration = controller.getDuration();
+                        long currentPosition = controller.getCurrentPosition();
+                        mSeekBar.setMax((int) duration);
+                        mSeekBar.setProgress((int) currentPosition);
+
+                    }
+
+                }
+            };
+            timer.schedule(timerTask, 5, 500);
+        }
         }
 
         @Override
@@ -106,7 +129,7 @@ public class PlayActivity extends Activity {
     private void initService() {
 
         Intent intent = new Intent(PlayActivity.this, MusicService.class);
-        startService(intent);
+
         bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
@@ -232,7 +255,7 @@ public class PlayActivity extends Activity {
         });
 
         mQuit.setOnClickListener(v -> {
-
+            finish();
         });
 
         mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -255,17 +278,17 @@ public class PlayActivity extends Activity {
         });
     }
 
-    public static Handler handler = new Handler(Looper.myLooper()) {
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-            super.handleMessage(msg);
-            Bundle bundle = msg.getData();
-            int duration = bundle.getInt("duration");
-            int currentPosition = bundle.getInt("currentPosition");
-            mSeekBar.setMax(duration);
-            mSeekBar.setProgress(currentPosition);
-        }
-    };
+//    public static Handler handler = new Handler(Looper.myLooper()) {
+//        @Override
+//        public void handleMessage(@NonNull Message msg) {
+//            super.handleMessage(msg);
+//            Bundle bundle = msg.getData();
+//            int duration = bundle.getInt("duration");
+//            int currentPosition = bundle.getInt("currentPosition");
+//            mSeekBar.setMax(duration);
+//            mSeekBar.setProgress(currentPosition);
+//        }
+//    };
 
     //内部类，实现BroadcastReceiver
     public class MusicReceiver extends BroadcastReceiver {
@@ -291,6 +314,23 @@ public class PlayActivity extends Activity {
         mMusicArtist.setText(song.singer);
         mMusicPic.setImageBitmap(song.albumBitmap);
         mSeekBar.setMax(song.duration);
+        if (controller.isPlaying()) {
+            mPlayOrPause.setBackgroundResource(R.drawable.play);
+        } else {
+            mPlayOrPause.setBackgroundResource(R.drawable.pause);
+        }
+        switch (controller.getPlayMode()) {
+            case REPEAT_LIST:
+                mPlayMode.setBackgroundResource(R.drawable.repeat_list);
+                break;
+            case REPEAT_ONE:
+                mPlayMode.setBackgroundResource(R.drawable.repeat_one);
+                break;
+            case SHUFFLE:
+                mPlayMode.setBackgroundResource(R.drawable.shuffle);
+                break;
+        }
+
     }
 
 }

@@ -18,7 +18,9 @@ public class PermissionUtils {
     public static String[] permissions = {
             Manifest.permission.READ_MEDIA_AUDIO,
             Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.FOREGROUND_SERVICE,
+            Manifest.permission.POST_NOTIFICATIONS
     };
 
     //检查权限
@@ -28,10 +30,12 @@ public class PermissionUtils {
 //            ActivityCompat.requestPermissions(context, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
 //        }
 
-            if (ContextCompat.checkSelfPermission(context, permissions[0]) != PackageManager.PERMISSION_GRANTED
-            || ContextCompat.checkSelfPermission(context, permissions[1]) != PackageManager.PERMISSION_GRANTED
-            || ContextCompat.checkSelfPermission(context, permissions[2]) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(context, permissions, 1);
+        if (ContextCompat.checkSelfPermission(context, permissions[0]) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(context, permissions[1]) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(context, permissions[2]) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(context, permissions[3]) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(context, permissions[4]) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(context, permissions, 1);
 
         }
     }

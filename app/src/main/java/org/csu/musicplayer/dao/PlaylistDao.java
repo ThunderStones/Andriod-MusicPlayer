@@ -18,4 +18,6 @@ public interface PlaylistDao {
     void deletePlaylist(Playlist... histories);
     @Query("SELECT * FROM PLAYLIST")
     List<Playlist> getPlaylist();
+    @Query("SELECT * FROM playlist WHERE id = :playlistId")
+    Playlist getPlaylistById(int playlistId);
 }

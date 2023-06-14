@@ -36,10 +36,11 @@ public class FavoriteActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.rv_detail);
         toolbar.setNavigationIcon(R.drawable.ic_baseline_arrow_back_24);
         // TO-DO : get song list
-
+        songs = LoadSongUtils.getSongListByPlayListId(LoadSongUtils.favoriteListId);
+        toolbar.setTitle("我的收藏");
         setSupportActionBar(toolbar);
         SingleSongAdapter adapter = null;
-        adapter = new SingleSongAdapter(songs);
+        adapter = new SingleSongAdapter(songs, "True");
 
 //        adapter.setOnItemClickListener((view1, position) -> Toast.makeText(this, String.valueOf(position), Toast.LENGTH_SHORT).show());
         recyclerView.setAdapter(adapter);

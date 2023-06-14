@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -61,10 +60,10 @@ public class LoadSongUtils {
     public static Song song;
     private static final Uri sArtworkUri = Uri.parse("content://media/external/audio/albumart");
     private static long version = 0;
-    private static int favoriteListId;
+    public static int favoriteListId;
     private static PlaylistDao playlistDao;
     private static PlaylistItemDao playlistItemDao;
-
+    private static Map<Integer, Song> favoriteMap;
 
     private static boolean checkUpdate(Context context) {
         Set<String> volumeNames = MediaStore.getExternalVolumeNames(context);
@@ -134,7 +133,7 @@ public class LoadSongUtils {
             cursor.close();
         }
         list = new ArrayList<>(songMap.values());
-        Log.d("LoadSongUtils", "getMusic: " + list.toString());
+        Log.d("LoadSongUtils", "getMusic: " + list);
         return list;
 
     }
@@ -172,7 +171,7 @@ public class LoadSongUtils {
             Objects.requireNonNull(albumMap.get(String.valueOf(s.albumId))).songs.add(s);
         }
         albumList = new ArrayList<>(albumMap.values());
-        Log.d("LoadSongUtils", "getAlbums: " + albumList.toString());
+        Log.d("LoadSongUtils", "getAlbums: " + albumList);
         return albumList;
     }
 
@@ -294,6 +293,19 @@ public class LoadSongUtils {
         getLocalMusic(context);
         initDataBase(context);
         getFavoriteListId(context);
+        initFavoriteList();
+    }
+
+    private static void initFavoriteList() {
+        List<PlaylistItem> favoriteItems = playlistItemDao.getPlaylistItemsByPlaylistId(favoriteListId);
+        favoriteMap = new HashMap<>();
+        for (PlaylistItem favoriteItem : favoriteItems) {
+            int mediaId = favoriteItem.getMediaId();
+            Song song = songMap.get(mediaId);
+            if (song != null) {
+                favoriteMap.put(mediaId, song);
+            }
+        }
     }
 
     private static void initDataBase(Context context) {
@@ -317,12 +329,12 @@ public class LoadSongUtils {
         playlistDao.insertPlaylist(playList);
         getFavoriteListId(context);
     }
-    private static List<Playlist> getAllPlaylists() {
+    public static List<Playlist> getAllPlaylists() {
         List<Playlist> playlists = playlistDao.getPlaylist();
         playlists.removeIf(pl -> pl.getId() == favoriteListId);
         return playlists;
     }
-    private static List<Song> getSongListByPlayListId(int playlistId) {
+    public static List<Song> getSongListByPlayListId(int playlistId) {
         List<Song> songList = new ArrayList<>();
         List<PlaylistItem> playlistItems = playlistItemDao.getPlaylistItemsByPlaylistId(playlistId);
         for (PlaylistItem playlistItem : playlistItems) {
@@ -331,5 +343,50 @@ public class LoadSongUtils {
             }
         }
         return songList;
+    }
+    public static Map<Integer, Song> getSongMapByPlayListId(int playlistId) {
+        Map<Integer, Song> playlistMap = new HashMap<>();
+        List<PlaylistItem> playlistItems = playlistItemDao.getPlaylistItemsByPlaylistId(playlistId);
+        for (PlaylistItem playlistItem : playlistItems) {
+            if (songMap.containsKey(playlistItem.getMediaId())) {
+                playlistMap.put(playlistItem.getMediaId(), songMap.get(playlistItem.getMediaId()));
+            }
+        }
+        return playlistMap;
+    }
+    public static boolean isFavorite(int mediaId) {
+        return favoriteMap.containsKey(mediaId);
+    }
+
+    public static void addToPlaylist(int playlistId, int mediaId) {
+        Map<Integer, Song> playlistMap = getSongMapByPlayListId(playlistId);
+        if (!playlistMap.containsKey(mediaId)) {
+            PlaylistItem playlistItem = new PlaylistItem();
+            playlistItem.setPlaylistId(playlistId);
+            playlistItem.setMediaId(mediaId);
+            playlistItemDao.insertPlaylistItem(playlistItem);
+        }
+        if (playlistId == favoriteListId) {
+            initFavoriteList();
+        }
+    }
+    public static void deleteFromPlaylist(int playlistId, int mediaId) {
+        playlistItemDao.deleteByPlaylistIdAndMediaId(playlistId, mediaId);
+        if (playlistId == favoriteListId) {
+            initFavoriteList();
+        }
+    }
+    public static void createPlaylist(String name) {
+        Playlist playlist = new Playlist();
+        playlist.setName(name);
+        playlist.setType("normal");
+        playlistDao.insertPlaylist(playlist);
+
+    }
+    public static int getPlaylistCount(int playlistId) {
+        return playlistItemDao.getPlaylistItemsByPlaylistId(playlistId).size();
+    }
+    public static Playlist getPlaylistById(int playlistId) {
+        return playlistDao.getPlaylistById(playlistId);
     }
 }

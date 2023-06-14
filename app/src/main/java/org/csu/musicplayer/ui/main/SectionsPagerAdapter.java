@@ -30,7 +30,7 @@ public class SectionsPagerAdapter extends FragmentStateAdapter {
             case 0:
                 return new LocalFragment();
             case 1:
-                return new LocalFragment();
+                return new PlaylistFragment();
             default:
                 return new LocalFragment();
         }

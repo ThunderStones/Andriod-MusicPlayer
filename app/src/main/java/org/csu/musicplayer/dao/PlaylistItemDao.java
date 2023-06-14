@@ -18,4 +18,6 @@ public interface PlaylistItemDao {
     void deletePlaylistItem(PlaylistItem... playlistItems);
     @Query("SELECT * FROM playlist_item WHERE playlist_id = :playlistId")
     List<PlaylistItem> getPlaylistItemsByPlaylistId(int playlistId);
+    @Query("DELETE FROM playlist_item WHERE playlist_id = :playlistId AND media_id = :mediaId")
+    void deleteByPlaylistIdAndMediaId(int playlistId, int mediaId);
 }

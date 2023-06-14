@@ -29,8 +29,12 @@ public class MusicProviderUtils {
         }
     }
     //TO-DO 切换歌单
-    public static void setPlaylist() {
-
+    public static void setPlaylist(List<Song> songs) {
+        playlist = songs;
+        idMapIndex = new HashMap<>();
+        for (int i = 0; i < playlist.size(); i++) {
+            idMapIndex.put(songs.get(i).getId(), i);
+        }
     }
 
 }

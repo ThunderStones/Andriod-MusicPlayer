@@ -48,6 +48,7 @@
             android:id="@+id/mini_player"
             android:layout_gravity="bottom"
             android:layout_width="match_parent"
-            android:layout_height="@dimen/dp_50" />
+            android:layout_height="@dimen/dp_50"
+            android:layout_marginHorizontal="@dimen/dp_15"/>
     </LinearLayout>
 </LinearLayout>
