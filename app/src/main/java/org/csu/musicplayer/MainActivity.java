@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
 
         layout = findViewById(R.id.mini_player);
         ImageView albumPic = layout.findViewById(R.id.MainButtomPic);
-        albumPic.setImageResource(R.drawable.ic_baseline_access_time_24);
+//        albumPic.setImageResource(R.drawable.ic_baseline_access_time_24);
         layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
